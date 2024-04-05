@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/smtp"
 	"tugas-explorasi3/models"
 
 	"github.com/go-redis/redis/v8"
@@ -45,7 +46,8 @@ func CheckForNewBlogPosts() {
 		}
 
 		// send email ke subscriber
-		go sendEmailNotification(latestBlogPost) // pake goroutine untuk non-blocking
+		//go sendEmailNotification(latestBlogPost) // pake goroutine untuk non-blocking
+		go sendEmail()
 	} else {
 		log.Println("No new blog post found.")
 	}
@@ -68,6 +70,35 @@ func FetchLatestBlogPostFromDB(ctx context.Context) (*models.Blog, error) {
 	return &latestBlogPost, nil
 }
 
-func sendEmailNotification(post *models.Blog) {
-	fmt.Println("send email")
+func sendEmail() {
+	// Sender's email address and password.
+	from := "raphaelevaan1@gmail.com"
+	password := "sdhe qiez hlzf kgex"
+
+	// SMTP server configuration.
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	ctx := context.Background()
+	latestTitle, err := client.Get(ctx, latestBlogPostTitleKey).Result()
+	// cek redis error atau tidak
+	if err != nil && err != redis.Nil {
+		log.Printf("Error fetching latest blog post title from Redis: %v\n", err)
+		return
+	}
+
+	subject := "Jovi Baru Saja Mempublish Blog Baru"
+	body := latestTitle
+
+	to := "j0njovi0jjh2710@gmail.com"
+
+	// Message to send.
+	message := []byte(fmt.Sprintf("Subject: %s\n\n%s", subject, body))
+
+	// Authentication.
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	// Sending email.
+	smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, message)
+	fmt.Println("Email Sudah Terkirim!")
 }
