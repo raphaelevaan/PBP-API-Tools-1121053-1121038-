@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/go-redis/redis/v8"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var client *redis.Client
@@ -18,6 +19,14 @@ func SetupRedis() {
 }
 
 func SetupDatabase() *sql.DB {
+	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/db_tugasexplorasi3?parseTime=true&loc=Asia%2FJakarta")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
+}
+
+func connect() *sql.DB {
 	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/db_tugasexplorasi3?parseTime=true&loc=Asia%2FJakarta")
 	if err != nil {
 		log.Fatal(err)
